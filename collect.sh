@@ -23,9 +23,9 @@ rm -f 'collect.beam'
 
 erlc +debug 'collect.erl'
 
-erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
+erl --longnames "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
-erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
+erl --longnames "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
 
 tgz="collect-data-$(now).tgz"
 readonly tgz
