@@ -6,9 +6,9 @@ run([Node, Vhost, Queue]) ->
     Data0 = unicode:characters_to_list([atom_to_list(Vhost), "_"]),
     Data1 = unicode:characters_to_list([Data0, atom_to_list(Queue)]),
     QName = list_to_atom(Data1),
-    % io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
-    erpc:call(Node, collect, do_run, [QName]),
-    % io:format("[INFO] halting!"),
+    io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
+    Result = erpc:call(Node, collect, do_run, [QName]),
+    io:format("[INFO] halting, result: ~p~n", [Result]),
     init:stop().
 
 do_run(QName) when is_atom(QName) ->
@@ -18,13 +18,18 @@ do_run(QName) when is_atom(QName) ->
 collect_qq_data(QName) when is_atom(QName) ->
     QPid = whereis(QName),
     QPidNode = node(QPid),
-    QProcInfo = erpc:call(QPidNode, recon, info, [QName]),
-    QProcState = erpc:call(QPidNode, recon, get_state, [QName]),
-    {LeaderOrFollower, _} = QProcState,
-    FName = qq_fname(QName, LeaderOrFollower),
-    file:write_file(FName, io_lib:format("~p~n", [QProcInfo])),
-    file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
-    {ok, QProcState}.
+    case QPidNode of
+        undefined ->
+            {error, "please run from leader node"};
+        _ ->
+            QProcInfo = erpc:call(QPidNode, recon, info, [QName]),
+            QProcState = erpc:call(QPidNode, recon, get_state, [QName]),
+            {LeaderOrFollower, _} = QProcState,
+            FName = qq_fname(QName, LeaderOrFollower),
+            file:write_file(FName, io_lib:format("~p~n", [QProcInfo])),
+            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
+            {ok, QProcState}
+    end.
 
 collect_consumer_data(QProcState) ->
     {_LeaderOrFollower, State} = QProcState,

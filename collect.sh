@@ -1,9 +1,12 @@
 #!/bin/sh
 
 set -eu
-# set -x
+set -x
 
-export HOME=/var/lib/rabbitmq
+if [ ! -s "$HOME/.erlang.cookie" ]
+then
+    export HOME=/var/lib/rabbitmq
+fi
 
 now()
 {
@@ -37,3 +40,5 @@ echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 tar -czf "$tgz" ./*.txt
 
 rm -f ./*.data.txt
+rm -f ./collect.erl
+rm -f ./collect.beam
