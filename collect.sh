@@ -8,7 +8,7 @@ now()
     date '+%Y-%m-%dT%H%M%S%z'
 }
 
-readonly rmq_node="${1:-"rabbit@$(hostname)"}"
+readonly rmq_node="${1:-"rabbit@$(hostname -s)"}"
 readonly vhost="${2:-ecarenext}"
 readonly queue="${3:-ecn-fep-zone4}"
 
@@ -23,9 +23,9 @@ rm -f 'collect.beam'
 
 erlc +debug 'collect.erl'
 
-erl --longnames "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
+erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
-erl --longnames "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
+erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
 
 tgz="collect-data-$(now).tgz"
 readonly tgz
