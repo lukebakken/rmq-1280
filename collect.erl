@@ -1,15 +1,25 @@
 -module(collect).
 
--export([run/2]).
+-export([run/1, do_run/1]).
 
-run(Vhost, Queue) ->
-    QName = list_to_atom(Vhost ++ "_" ++ Queue),
+run([Node, Vhost, Queue]) ->
+    Data0 = unicode:characters_to_list([atom_to_list(Vhost), "_"]),
+    Data1 = unicode:characters_to_list([Data0, atom_to_list(Queue)]),
+    QName = list_to_atom(Data1),
+    io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
+    erpc:call(Node, collect, do_run, [QName]),
+    io:format("[INFO] halting!"),
+    halt().
+
+do_run(QName) when is_atom(QName) ->
     {ok, QProcState} = collect_qq_data(QName),
     ok = collect_consumer_data(QProcState).
 
 collect_qq_data(QName) when is_atom(QName) ->
-    QProcInfo = recon:info(QName),
-    QProcState = recon:get_state(QName),
+    QPid = whereis(QName),
+    QPidNode = node(QPid),
+    QProcInfo = erpc:call(QPidNode, recon, info, [QName]),
+    QProcState = erpc:call(QPidNode, recon, get_state, [QName]),
     {LeaderOrFollower, _} = QProcState,
     FName = qq_fname(QName, LeaderOrFollower),
     file:write_file(FName, io_lib:format("~p~n", [QProcInfo])),
