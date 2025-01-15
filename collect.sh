@@ -3,6 +3,8 @@
 set -eu
 # set -x
 
+export HOME=/var/lib/rabbitmq
+
 now()
 {
     date '+%Y-%m-%dT%H%M%S%z'
@@ -33,3 +35,5 @@ readonly tgz
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 
 tar -czf "$tgz" ./*.txt
+
+rm -f ./*.data.txt
