@@ -12,7 +12,7 @@ readonly rmq_node="${1:-"rabbit@$(hostname)"}"
 readonly vhost="${2:-ecarenext}"
 readonly queue="${3:-ecn-fep-zone4}"
 
-rmq_cwd="$(rabbitmqctl --node "$rmq_node" eval 'file:get_cwd().' | sed -e 's/[^"]*"//' -e 's/".*$//')"
+rmq_cwd="$(rabbitmqctl --node "$rmq_node" eval 'file:get_cwd().' | sed -e 's/[^"]*"\([^"]\+\)".*/\1/')"
 readonly rmq_cwd
 
 echo "$(now) [INFO] cwd: $rmq_cwd"
