@@ -5,7 +5,7 @@ set -eu
 
 now()
 {
-    date '+%Y-%m-%dT%H:%M:%S%z'
+    date '+%Y-%m-%dT%H%M%S%z'
 }
 
 readonly rmq_node="${1:-"rabbit@$(hostname)"}"
@@ -19,10 +19,17 @@ echo "$(now) [INFO] cwd: $rmq_cwd"
 
 cp -f 'collect.erl' "$rmq_cwd"
 cd "$rmq_cwd"
-rm -vf 'collect.beam'
+rm -f 'collect.beam'
 
 erlc +debug 'collect.erl'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
+
+tgz="collect-data-$(now).tgz"
+readonly tgz
+
+echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
+
+tar -czf "$tgz" ./*.txt

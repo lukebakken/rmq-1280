@@ -6,10 +6,10 @@ run([Node, Vhost, Queue]) ->
     Data0 = unicode:characters_to_list([atom_to_list(Vhost), "_"]),
     Data1 = unicode:characters_to_list([Data0, atom_to_list(Queue)]),
     QName = list_to_atom(Data1),
-    io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
+    % io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
     erpc:call(Node, collect, do_run, [QName]),
-    io:format("[INFO] halting!"),
-    halt().
+    % io:format("[INFO] halting!"),
+    init:stop().
 
 do_run(QName) when is_atom(QName) ->
     {ok, QProcState} = collect_qq_data(QName),
