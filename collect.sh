@@ -13,6 +13,11 @@ now()
     date '+%Y-%m-%dT%H%M%S%z'
 }
 
+now_unix()
+{
+    date '+%s'
+}
+
 readonly rmq_node="${1:-"rabbit@$(hostname -s)"}"
 readonly vhost="${2:-ecarenext}"
 readonly queue="${3:-ecn-fep-zone4}"
@@ -32,7 +37,7 @@ erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
 
-tgz="collect-data-$(now).tgz"
+tgz="collect-data-$(now)-$(now_unix).tgz"
 readonly tgz
 
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
