@@ -15,19 +15,21 @@ logging.basicConfig(level=logging.INFO, format=log_fmt, datefmt=log_date_fmt)
 logger = logging.getLogger()
 
 parser = argparse.ArgumentParser(
-    prog="repro.py", description="attempt to repro rmq-1280"
+    prog="repro.py", description="attempt to repro rmq-1280", add_help=False
 )
+parser.add_argument("-h", "--host", default="shostakovich")
 parser.add_argument("-p", "--port", default="5672", type=int)
 parser.add_argument("-v", "--vhost", default="/")
 ns = parser.parse_args()
 rmq_port = ns.port
-vhost = ns.vhost
+rmq_vhost = ns.vhost
+rmq_host = ns.host
 
 credentials = pika.PlainCredentials("guest", "guest")
 parameters = pika.ConnectionParameters(
-    host="localhost",
+    host=rmq_host,
     port=rmq_port,
-    virtual_host=vhost,
+    virtual_host=rmq_vhost,
     credentials=credentials,
 )
 
