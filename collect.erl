@@ -26,7 +26,8 @@ collect_qq_data(QName) when is_atom(QName) ->
             QProcState = erpc:call(QPidNode, recon, get_state, [QName]),
             {LeaderOrFollower, _} = QProcState,
             FName = qq_fname(QName, LeaderOrFollower),
-            file:write_file(FName, io_lib:format("~p~n", [QProcInfo])),
+            file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
+            file:write_file(FName, io_lib:format("--------~p~n", [QProcInfo])),
             file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
             {ok, QProcState}
     end.
@@ -40,7 +41,8 @@ collect_consumer_data(QProcState) ->
          PidNode = node(Pid),
          PidInfo = erpc:call(PidNode, recon, info, [Pid], 5000),
          FName = consumer_fname(CTag, PidNode),
-         file:write_file(FName, io_lib:format("~p~n", [PidInfo])),
+         file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
+         file:write_file(FName, io_lib:format("--------~p~n", [PidInfo])),
          file:write_file(FName, io_lib:format("--------~n~p~n", [recon:get_state(Pid)]), [append])
      end || {CTag, Pid} <- maps:keys(ConsumerMap)],
     ok.
