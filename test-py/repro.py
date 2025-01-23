@@ -5,6 +5,7 @@ import argparse
 import logging
 import pika
 import pika.exceptions
+import queue
 
 CONSUMER_TAG="RMQ-1280-CTAG"
 QUEUE="RMQ-1280-0"
@@ -33,19 +34,32 @@ parameters = pika.ConnectionParameters(
     credentials=credentials,
 )
 
+global acks
+acks = queue.SimpleQueue()
+
 global connection
 connection = pika.BlockingConnection(parameters)
 
 channel = connection.channel()
-channel.basic_qos(prefetch_count=8)
+channel.basic_qos(prefetch_count=25)
 
 
 def on_message(ch, method_frame, header_frame, body):
     delivery_tag = method_frame.delivery_tag
-    if delivery_tag % 5 == 0:
-        logger.info("NOT acking message with dtag, cancelling consumer: %d", delivery_tag)
-        ch.basic_cancel(CONSUMER_TAG)
+    logger.info("received message with dtag: %d", delivery_tag)
+    if delivery_tag % 100 == 0:
+        dtag = 0
+        if acks.empty():
+            logger.info("NOT acking message with dtag: %d", delivery_tag)
+            acks.put(delivery_tag)
+        else:
+            dtag = acks.get()
+            logger.info("NOT acking message with dtag: %d, acking previous tag: %d", delivery_tag, dtag)
+            ch.basic_ack(dtag)
+            acks.put(delivery_tag)
+        connection.process_data_events(1)
         logger.info("restarting consumer")
+        ch.basic_cancel(CONSUMER_TAG)
         connection.process_data_events(1)
         ch.basic_consume(on_message_callback=on_message, consumer_tag=CONSUMER_TAG, queue=QUEUE)
     else:
