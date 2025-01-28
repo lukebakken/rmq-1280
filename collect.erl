@@ -15,25 +15,38 @@ do_run(QName) when is_atom(QName) ->
     {ok, QProcState} = collect_qq_data(QName),
     ok = collect_consumer_data(QProcState).
 
+% (rabbit-1@PROKOFIEV)8> ra:members(QPid).
+% {ok,[{'%2F_RMQ-1280-0','rabbit-1@PROKOFIEV'}, {'%2F_RMQ-1280-0','rabbit-2@PROKOFIEV'}, {'%2F_RMQ-1280-0','rabbit-3@PROKOFIEV'}], {'%2F_RMQ-1280-0','rabbit-1@PROKOFIEV'}}
 collect_qq_data(QName) when is_atom(QName) ->
     QPid = whereis(QName),
     Node = node(),
     QPidNode = node(QPid),
-    case QPidNode of
-        Node ->
-            QProcInfo = recon:info(QName),
-            QProcState = recon:get_state(QName),
-            {leader, _} = QProcState,
-            FName = qq_fname(QName, leader),
-            file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
-            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcInfo]), [append]),
-            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
-            {ok, QProcState};
-        undefined ->
-            {error, "please run from leader node"};
-        _ ->
-            {error, "please run from leader node"}
-    end.
+    QLeaderProcState = case QPidNode of
+                           Node ->
+                               QProcInfo = recon:info(QName),
+                               QProcState = recon:get_state(QName),
+                               {leader, _} = QProcState,
+                               FName = qq_fname(QName, Node, leader),
+                               file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
+                               file:write_file(FName, io_lib:format("--------~n~p~n", [QProcInfo]), [append]),
+                               file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
+                               QProcState;
+                           undefined ->
+                               {error, "please run from leader node"};
+                           _ ->
+                               {error, "please run from leader node"}
+                       end,
+    {ok, RaMembers, _RaLeader} = ra:members(QPid),
+    [begin
+        QFollowerProcInfo = erpc:call(QNode, recon, info, [QName]),
+        QFollowerProcState = erpc:call(QNode, recon, get_state, [QName]),
+        {follower, _} = QFollowerProcState,
+        FName0 = qq_fname(QName, QNode, follower),
+        file:write_file(FName0, io_lib:format("~p~n", [os:system_time(millisecond)])),
+        file:write_file(FName0, io_lib:format("--------~n~p~n", [QFollowerProcInfo]), [append]),
+        file:write_file(FName0, io_lib:format("--------~n~p~n", [QFollowerProcState]), [append])
+     end || {_, QNode} <- RaMembers, QNode =/= Node],
+    {ok, QLeaderProcState}.
 
 collect_consumer_data(QProcState) ->
     {_LeaderOrFollower, State} = QProcState,
@@ -50,8 +63,12 @@ collect_consumer_data(QProcState) ->
      end || {CTag, Pid} <- maps:keys(ConsumerMap)],
     ok.
 
-qq_fname(QName, LeaderOrFollower) ->
-    Arg = [atom_to_binary(QName), <<"-">>, atom_to_binary(LeaderOrFollower), <<".data.txt">>],
+qq_fname(QName, Node, LeaderOrFollower) ->
+    Arg = [atom_to_binary(QName), <<"-">>,
+           atom_to_binary(LeaderOrFollower),
+           <<"-">>,
+           atom_to_binary(Node),
+           <<".data.txt">>],
     unicode:characters_to_binary(Arg, latin1).
 
 consumer_fname(CTag, Node) ->

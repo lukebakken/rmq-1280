@@ -19,8 +19,8 @@ now_unix()
 }
 
 readonly rmq_node="${1:-"rabbit@$(hostname -s)"}"
-readonly vhost="${2:-ecarenext}"
-readonly queue="${3:-ecn-fep-zone4}"
+readonly rmq_vhost="${2:-ecarenext}"
+readonly rmq_queue="${3:-ecn-fep-zone4}"
 
 rmq_cwd="$(rabbitmqctl --node "$rmq_node" eval 'file:get_cwd().' | sed -e 's/[^"]*"\([^"]\+\)".*/\1/')"
 readonly rmq_cwd
@@ -35,9 +35,9 @@ erlc +debug 'collect.erl'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
-erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
+erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$rmq_vhost" "$rmq_queue"
 
-tgz="collect-data-$(queue)-$(now)-$(now_unix).tgz"
+tgz="collect-data-$rmq_queue-$(now)-$(now_unix).tgz"
 readonly tgz
 
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
