@@ -17,19 +17,22 @@ do_run(QName) when is_atom(QName) ->
 
 collect_qq_data(QName) when is_atom(QName) ->
     QPid = whereis(QName),
+    Node = node(),
     QPidNode = node(QPid),
     case QPidNode of
+        Node ->
+            QProcInfo = recon:info(QName),
+            QProcState = recon:get_state(QName),
+            {leader, _} = QProcState,
+            FName = qq_fname(QName, leader),
+            file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
+            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcInfo]), [append]),
+            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
+            {ok, QProcState};
         undefined ->
             {error, "please run from leader node"};
         _ ->
-            QProcInfo = erpc:call(QPidNode, recon, info, [QName]),
-            QProcState = erpc:call(QPidNode, recon, get_state, [QName]),
-            {LeaderOrFollower, _} = QProcState,
-            FName = qq_fname(QName, LeaderOrFollower),
-            file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
-            file:write_file(FName, io_lib:format("--------~p~n", [QProcInfo])),
-            file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
-            {ok, QProcState}
+            {error, "please run from leader node"}
     end.
 
 collect_consumer_data(QProcState) ->
@@ -42,7 +45,7 @@ collect_consumer_data(QProcState) ->
          PidInfo = erpc:call(PidNode, recon, info, [Pid], 5000),
          FName = consumer_fname(CTag, PidNode),
          file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
-         file:write_file(FName, io_lib:format("--------~p~n", [PidInfo])),
+         file:write_file(FName, io_lib:format("--------~n~p~n", [PidInfo]), [append]),
          file:write_file(FName, io_lib:format("--------~n~p~n", [recon:get_state(Pid)]), [append])
      end || {CTag, Pid} <- maps:keys(ConsumerMap)],
     ok.

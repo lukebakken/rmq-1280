@@ -37,13 +37,16 @@ erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$vhost" "$queue"
 
-tgz="collect-data-$(now)-$(now_unix).tgz"
+tgz="collect-data-$(queue)-$(now)-$(now_unix).tgz"
 readonly tgz
 
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 
 tar -czf "$tgz" ./*.txt
 
-rm -f ./*.data.txt
-rm -f ./collect.erl
-rm -f ./collect.beam
+if [ -z "$COLLECT_DEBUG" ]
+then
+    rm -f ./*.data.txt
+    rm -f ./collect.erl
+    rm -f ./collect.beam
+fi
