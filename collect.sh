@@ -50,4 +50,6 @@ then
     rm -f ./*.data.txt
     rm -f ./collect.erl
     rm -f ./collect.beam
+    rm -f ./code_collect.erl
+    rm -f ./code_collect.beam
 fi
