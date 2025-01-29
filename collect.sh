@@ -33,12 +33,13 @@ rm -f code_collect.beam collect.beam
 
 erlc +debug 'code_collect.erl'
 erlc +debug 'collect.erl'
-
 erl -sname "rmq-1280-$$" -noinput -noshell -s code_collect purge "$rmq_node"
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$rmq_vhost" "$rmq_queue"
 
 tgz="collect-data-$rmq_queue-$(now)-$(now_unix).tgz"
 readonly tgz
+
+rabbitmq-queues --node "$rmq_node" --vhost "$rmq_vhost" quorum_status "$rmq_queue" > "quorum_status-$rmq_queue-$(now).txt" 2>&1
 
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 
