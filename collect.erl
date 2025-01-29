@@ -32,7 +32,8 @@ collect_qq_data(QName) when is_atom(QName) ->
                             case QProcState of
                                 {leader, _} ->
                                     FName = qq_fname(QName, Node, leader),
-                                    file:write_file(FName, io_lib:format("FOOBAR~n~p~n", [os:system_time(millisecond)])),
+                                    file:delete(FName),
+                                    file:write_file(FName, io_lib:format("BAZBAT~n~p~n", [os:system_time(millisecond)])),
                                     file:write_file(FName, io_lib:format("--------~n~p~n", [QProcInfo]), [append]),
                                     file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
                                     {ok, QProcState};
@@ -52,6 +53,7 @@ collect_qq_data(QName) when is_atom(QName) ->
                  QFollowerProcState = erpc:call(QNode, recon, get_state, [QName]),
                  {follower, _} = QFollowerProcState,
                  FName0 = qq_fname(QName, QNode, follower),
+                 file:delete(FName0),
                  file:write_file(FName0, io_lib:format("~p~n", [os:system_time(millisecond)])),
                  file:write_file(FName0, io_lib:format("--------~n~p~n", [QFollowerProcInfo]), [append]),
                  file:write_file(FName0, io_lib:format("--------~n~p~n", [QFollowerProcState]), [append])
@@ -70,6 +72,7 @@ collect_consumer_data(QProcState) ->
          PidNode = node(Pid),
          PidInfo = erpc:call(PidNode, recon, info, [Pid], 5000),
          FName = consumer_fname(CTag, PidNode),
+         file:delete(FName),
          file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
          file:write_file(FName, io_lib:format("--------~n~p~n", [PidInfo]), [append]),
          file:write_file(FName, io_lib:format("--------~n~p~n", [recon:get_state(Pid)]), [append])
