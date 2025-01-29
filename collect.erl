@@ -32,7 +32,7 @@ collect_qq_data(QName) when is_atom(QName) ->
                             case QProcState of
                                 {leader, _} ->
                                     FName = qq_fname(QName, Node, leader),
-                                    file:write_file(FName, io_lib:format("~p~n", [os:system_time(millisecond)])),
+                                    file:write_file(FName, io_lib:format("FOOBAR~n~p~n", [os:system_time(millisecond)])),
                                     file:write_file(FName, io_lib:format("--------~n~p~n", [QProcInfo]), [append]),
                                     file:write_file(FName, io_lib:format("--------~n~p~n", [QProcState]), [append]),
                                     {ok, QProcState};

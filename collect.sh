@@ -33,7 +33,7 @@ rm -f 'collect.beam'
 
 erlc +debug 'collect.erl'
 
-erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),halt().'
+erl -sname "rmq-1280-$$" -noinput -noshell -eval 'code:purge(collect),code:delete(collect),code:load_file(collect),code:purge(collect),code:delete(collect),code:load_file(collect),halt().'
 
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$rmq_vhost" "$rmq_queue"
 
@@ -44,6 +44,7 @@ echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 
 tar -czf "$tgz" ./*.txt
 
+set +u
 if [ -z "$COLLECT_DEBUG" ]
 then
     rm -f ./*.data.txt
