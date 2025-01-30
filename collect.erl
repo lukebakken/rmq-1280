@@ -7,7 +7,7 @@ run([Node, Vhost, Queue]) ->
     Data1 = unicode:characters_to_list([Data0, atom_to_list(Queue)]),
     QName = list_to_atom(Data1),
     io:format("[INFO] VHost ~p Queue ~p QName ~p~n", [Vhost, Queue, QName]),
-    Result = erpc:call(Node, collect, do_run, [QName]),
+    Result = erpc:call(Node, ?MODULE, do_run, [QName]),
     io:format("[INFO] halting, result: ~p~n", [Result]),
     init:stop().
 

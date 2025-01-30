@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -eu
-set -x
+# set -x
 
 if [ ! -s "$HOME/.erlang.cookie" ]
 then
@@ -39,7 +39,7 @@ erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$rmq_vhos
 tgz="collect-data-$rmq_queue-$(now)-$(now_unix).tgz"
 readonly tgz
 
-rabbitmq-queues --node "$rmq_node" --vhost "$rmq_vhost" quorum_status "$rmq_queue" > "quorum_status-$rmq_queue-$(now).txt" 2>&1
+rabbitmq-queues --node "$rmq_node" --formatter json --vhost "$rmq_vhost" quorum_status "$rmq_queue" > "quorum_status-$rmq_queue-$(now).json.txt" 2>&1
 
 echo "$(now) [INFO] creating archive '$tgz' in '$PWD'"
 
