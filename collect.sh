@@ -34,13 +34,13 @@ readonly rmq_cwd
 
 echo "$(now) [INFO] cwd: $rmq_cwd"
 
-cp -f code_collect.erl collect.erl "$rmq_cwd"
+cp -f code_purger.erl collect.erl "$rmq_cwd"
 cd "$rmq_cwd"
-rm -f code_collect.beam collect.beam
+rm -f code_purger.beam collect.beam
 
-erlc +debug 'code_collect.erl'
+erlc +debug 'code_purger.erl'
 erlc +debug 'collect.erl'
-erl -sname "rmq-1280-$$" -noinput -noshell -s code_collect purge "$rmq_node"
+erl -sname "rmq-1280-$$" -noinput -noshell -s code_purger purge "$rmq_node" 'collect'
 erl -sname "rmq-1280-$$" -noinput -noshell -s collect run "$rmq_node" "$rmq_enc_vhost" "$rmq_queue"
 
 tgz="collect-data-$rmq_queue-$(now)-$(now_unix).tgz"
@@ -58,6 +58,6 @@ then
     rm -f ./*.data.txt
     rm -f ./collect.erl
     rm -f ./collect.beam
-    rm -f ./code_collect.erl
-    rm -f ./code_collect.beam
+    rm -f ./code_purger.erl
+    rm -f ./code_purger.beam
 fi
